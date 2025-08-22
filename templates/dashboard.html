@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Same head content as before -->
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <i class="bi bi-people-fill"></i> Classroom Analytics
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          {% if current_user.role == 'teacher' %}
+            <li class="nav-item">
+              <a class="nav-link active" href="/dashboard"><i class="bi bi-speedometer2"></i> Faculty Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/upload"><i class="bi bi-upload"></i> Upload Lecture</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link active" href="/dashboard"><i class="bi bi-speedometer2"></i> HOD Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/comparison"><i class="bi bi-bar-chart"></i> Teacher Comparison</a>
+            </li>
+          {% endif %}
+          <li class="nav-item">
+            <a class="nav-link" href="/history"><i class="bi bi-clock-history"></i> History</a>
+          </li>
+        </ul>
+        <div class="d-flex">
+          <span class="navbar-text me-3">
+            <i class="bi bi-person-circle"></i> {{ current_user.name }}
+          </span>
+          <a href="/logout" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    {% if current_user.role == 'teacher' %}
+      <!-- FACULTY DASHBOARD CONTENT (your existing template) -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              <h5><i class="bi bi-upload"></i> Upload Lecture Images</h5>
+            </div>
+            <div class="card-body">
+              <form id="uploadForm" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label for="lectureDate" class="form-label">Lecture Date</label>
+                  <input type="date" class="form-control" id="lectureDate" required>
+                </div>
+                <div class="mb-3">
+                  <label for="lectureImages" class="form-label">Select Images</label>
+                  <input class="form-control" type="file" id="lectureImages" multiple accept="image/*" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-cloud-upload"></i> Upload & Analyze
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              <h5><i class="bi bi-graph-up"></i> Recent Lecture Analytics</h5>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height: 300px;">
+                <canvas id="attentivenessChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Your existing analysis result template would be loaded after upload -->
+      <div id="analysisResults" class="d-none">
+        <!-- Previous template content here -->
+      </div>
+
+    {% else %}
+      <!-- HOD DASHBOARD CONTENT -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-primary text-white">
+              <h5><i class="bi bi-funnel"></i> Filter Analytics</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-3">
+                  <label for="subjectFilter" class="form-label">Subject</label>
+                  <select class="form-select" id="subjectFilter">
+                    <option value="">All Subjects</option>
+                    <option>Mathematics</option>
+                    <option>Science</option>
+                    <option>History</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label for="classFilter" class="form-label">Class</label>
+                  <select class="form-select" id="classFilter">
+                    <option value="">All Classes</option>
+                    <option>10th Grade</option>
+                    <option>11th Grade</option>
+                    <option>12th Grade</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label for="dateFrom" class="form-label">From Date</label>
+                  <input type="date" class="form-control" id="dateFrom">
+                </div>
+                <div class="col-md-3">
+                  <label for="dateTo" class="form-label">To Date</label>
+                  <input type="date" class="form-control" id="dateTo">
+                </div>
+              </div>
+              <div class="mt-3">
+                <button id="applyFilter" class="btn btn-primary">
+                  <i class="bi bi-funnel"></i> Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-8">
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              <h5><i class="bi bi-bar-chart"></i> Teacher Comparison by Attention Score</h5>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height: 400px;">
+                <canvas id="teacherComparisonChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              <h5><i class="bi bi-trophy"></i> Top Performers</h5>
+            </div>
+            <div class="card-body">
+              <div class="list-group">
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-1">Dr. Smith</h6>
+                    <small class="text-muted">Mathematics</small>
+                  </div>
+                  <span class="badge bg-success rounded-pill">84%</span>
+                </div>
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-1">Prof. Johnson</h6>
+                    <small class="text-muted">Science</small>
+                  </div>
+                  <span class="badge bg-success rounded-pill">79%</span>
+                </div>
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <h6 class="mb-1">Ms. Williams</h6>
+                    <small class="text-muted">History</small>
+                  </div>
+                  <span class="badge bg-primary rounded-pill">72%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Initialize charts based on user role
+    document.addEventListener('DOMContentLoaded', function() {
+      {% if current_user.role == 'teacher' %}
+        // Faculty dashboard charts
+        const ctx1 = document.getElementById('attentivenessChart').getContext('2d');
+        new Chart(ctx1, {
+          type: 'line',
+          data: {
+            labels: ['Lecture 1', 'Lecture 2', 'Lecture 3', 'Lecture 4', 'Lecture 5'],
+            datasets: [{
+              label: 'Attention Score',
+              data: [65, 72, 68, 75, 80],
+              borderColor: '#0d6efd',
+              backgroundColor: 'rgba(13, 110, 253, 0.1)',
+              tension: 0.3,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100
+              }
+            }
+          }
+        });
+
+        // Handle image upload
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+          e.preventDefault();
+          // Simulate upload and analysis
+          document.getElementById('analysisResults').classList.remove('d-none');
+          window.scrollTo({
+            top: document.getElementById('analysisResults').offsetTop,
+            behavior: 'smooth'
+          });
+        });
+
+      {% else %}
+        // HOD dashboard charts
+        const ctx2 = document.getElementById('teacherComparisonChart').getContext('2d');
+        new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: ['Dr. Smith', 'Prof. Johnson', 'Ms. Williams', 'Mr. Brown', 'Dr. Davis'],
+            datasets: [
+              {
+                label: 'Active Engagement',
+                data: [75, 68, 62, 58, 72],
+                backgroundColor: 'rgba(40, 167, 69, 0.7)'
+              },
+              {
+                label: 'Calm Attention',
+                data: [65, 72, 68, 64, 70],
+                backgroundColor: 'rgba(23, 162, 184, 0.7)'
+              },
+              {
+                label: 'Focused Challenge',
+                data: [15, 20, 25, 30, 18],
+                backgroundColor: 'rgba(255, 193, 7, 0.7)'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                stacked: true,
+              },
+              y: {
+                stacked: true,
+                beginAtZero: true,
+                max: 100
+              }
+            }
+          }
+        });
+
+        // Filter functionality
+        document.getElementById('applyFilter').addEventListener('click', function() {
+          // In a real app, this would reload data with filters
+          alert('Filters applied! This would reload data with selected filters in a real application.');
+        });
+      {% endif %}
+    });
+  </script>
+</body>
+</html>

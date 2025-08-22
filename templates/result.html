@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analysis Result</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .result-card {
+      margin-top: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      border: none;
+    }
+    .result-card:hover {
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      transform: translateY(-5px);
+    }
+    .processed-image {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+    .processed-image:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .summary-box {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+      border-left: 4px solid #0d6efd;
+    }
+    .summary-box:hover {
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .stat-card {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+      border-left: 4px solid;
+      animation: fadeInUp 0.6s ease-out;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    .stat-card.bg-success { border-left-color: #28a745; }
+    .stat-card.bg-info { border-left-color: #17a2b8; }
+    .stat-card.bg-warning { border-left-color: #ffc107; }
+    .stat-card.bg-danger { border-left-color: #dc3545; }
+    
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-bottom: 20px;
+      animation: fadeIn 1s ease-in;
+    }
+    .timestamp {
+      font-size: 0.85rem;
+      color: #6c757d;
+      opacity: 0;
+      animation: fadeIn 1s ease-in 0.5s forwards;
+    }
+    .emotion-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+      opacity: 0;
+      animation: fadeIn 1s ease-in 0.8s forwards;
+    }
+    .emotion-legend-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+      padding: 5px 10px;
+      background: rgba(255,255,255,0.8);
+      border-radius: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
+    }
+    .emotion-legend-item:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .emotion-color {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      margin-right: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .insight-icon {
+      margin-right: 8px;
+      font-size: 1.2rem;
+      transition: all 0.3s ease;
+    }
+    .positive-insight {
+      color: #28a745;
+      animation: pulse 2s infinite;
+    }
+    .neutral-insight {
+      color: #ffc107;
+    }
+    .negative-insight {
+      color: #dc3545;
+      animation: headShake 1s;
+    }
+    .card-header {
+      transition: all 0.3s ease;
+    }
+    .card-header:hover {
+      background-color: #0b5ed7 !important;
+    }
+    .breadcrumb {
+      background-color: transparent;
+      padding: 0.75rem 1rem;
+      border-radius: 0.375rem;
+      animation: fadeInDown 0.6s ease-out;
+    }
+    .breadcrumb-item.active {
+      font-weight: 500;
+    }
+    .btn {
+      transition: all 0.3s ease;
+      transform: translateY(0);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0px); }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+    .animate-delay-1 { animation-delay: 0.2s; }
+    .animate-delay-2 { animation-delay: 0.4s; }
+    .animate-delay-3 { animation-delay: 0.6s; }
+    .animate-delay-4 { animation-delay: 0.8s; }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div class="row">
+      <div class="col-12">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="/history" class="text-decoration-none">History</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Analysis Result</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+    
+    <div class="row">
+      <div class="col-12">
+        <div class="card shadow result-card animate__animated animate__fadeIn">
+          <div class="card-header bg-primary text-white animate__animated animate__fadeInDown">
+            <h2 class="fs-4 mb-0"><i class="bi bi-graph-up-arrow"></i> Classroom Emotion Analysis Result</h2>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-lg-6">
+                <h3 class="fs-5 animate__animated animate__fadeInLeft">Analysis Summary</h3>
+                <div class="summary-box animate__animated animate__fadeInLeft animate-delay-1">
+                  <pre class="mb-0">{{ result }}</pre>
+                  <hr>
+                  <p class="timestamp">
+                    Analysis ID: {{ analysis.id }}<br>
+                    Timestamp: {{ analysis.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                  </p>
+                </div>
+                
+                <h3 class="fs-5 animate__animated animate__fadeInLeft animate-delay-2">Emotion Statistics</h3>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="stat-card bg-success bg-opacity-10 animate__animated animate__fadeInUp animate-delay-3">
+                      <h5><i class="bi bi-emoji-smile"></i> Active Engagement (Happy)</h5>
+                      <h2 class="animate-float">{{ analysis.active_engagement_count }}</h2>
+                      <small>{{ ((analysis.active_engagement_count / analysis.person_count) * 100)|round(1) }}% of class</small>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="stat-card bg-info bg-opacity-10 animate__animated animate__fadeInUp animate-delay-4">
+                      <h5><i class="bi bi-emoji-neutral"></i> Calm Attention (Netural) </h5>
+                      <h2 class="animate-float">{{ analysis.calm_attention_count }}</h2>
+                      <small>{{ ((analysis.calm_attention_count / analysis.person_count) * 100)|round(1) }}% of class</small>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="stat-card bg-warning bg-opacity-10 animate__animated animate__fadeInUp animate-delay-5">
+                      <h5><i class="bi bi-emoji-frown"></i> Focused Challenge (Sad) </h5>
+                      <h2 class="animate-float">{{ analysis.focused_challenge_count }}</h2>
+                      <small>{{ ((analysis.focused_challenge_count / analysis.person_count) * 100)|round(1) }}% of class</small>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="stat-card bg-danger bg-opacity-10 animate__animated animate__fadeInUp animate-delay-6">
+                      <h5><i class="bi bi-emoji-angry"></i> Classroom Tension (Angry) </h5>
+                      <h2 class="animate-float">{{ analysis.classroom_tension_count }}</h2>
+                      <small>{{ ((analysis.classroom_tension_count / analysis.person_count) * 100)|round(1) }}% of class</small>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="chart-container">
+                  <canvas id="emotionsChart"></canvas>
+                  <div class="emotion-legend" id="emotionLegend"></div>
+                </div>
+              </div>
+              
+              <div class="col-lg-6 animate__animated animate__fadeInRight">
+                <h3 class="fs-5">Processed Image</h3>
+                {% if processed_image_url %}
+                  <img src="{{ processed_image_url }}" alt="Processed Image" class="processed-image animate__animated animate__zoomIn">
+                {% endif %}
+                
+                <div class="d-grid gap-2 mt-4 animate__animated animate__fadeInUp">
+                  <a href="/" class="btn btn-primary"><i class="bi bi-camera"></i> Analyze Another Image</a>
+                  <a href="/history" class="btn btn-outline-secondary"><i class="bi bi-clock-history"></i> View Analysis History</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card shadow animate__animated animate__fadeInUp">
+          <div class="card-header animate__animated animate__fadeIn">
+            <h3 class="fs-5 mb-0"><i class="bi bi-lightbulb"></i> Classroom Insights</h3>
+          </div>
+          <div class="card-body">
+            <div id="insights">
+              <!-- Insights will be dynamically generated based on the data -->
+            </div>
+            <div id="recommendations" class="mt-3">
+              <!-- Recommendations will be dynamically generated -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  
+  <script>
+    // Prepare data for chart
+    const emotionData = {
+      labels: [
+        'Active Engagement (Happy)', 
+        'Calm Attention (Neutral)', 
+        'Focused Challenge (Sad)', 
+        'Classroom Tension (Angry)',
+        'Learning Anxiety (Fear)',
+        'Learning Surprise (Surprise)'
+      ],
+      datasets: [{
+        label: 'Student Count',
+        data: [
+          {{ analysis.active_engagement_count or 0 }},
+          {{ analysis.calm_attention_count or 0 }},
+          {{ analysis.focused_challenge_count or 0 }},
+          {{ analysis.classroom_tension_count or 0 }},
+          {{ analysis.learning_anxiety_count or 0 }},
+          {{ analysis.learning_surprise_count or 0 }}
+        ],
+        backgroundColor: [
+          'rgba(40, 167, 69, 0.7)',  // Green
+          'rgba(23, 162, 184, 0.7)', // Cyan
+          'rgba(255, 193, 7, 0.7)',  // Yellow
+          'rgba(220, 53, 69, 0.7)',  // Red
+          'rgba(108, 117, 125, 0.7)', // Gray
+          'rgba(111, 66, 193, 0.7)'   // Purple
+        ],
+        borderColor: [
+          'rgb(40, 167, 69)',
+          'rgb(23, 162, 184)',
+          'rgb(255, 193, 7)',
+          'rgb(220, 53, 69)',
+          'rgb(108, 117, 125)',
+          'rgb(111, 66, 193)'
+        ],
+        borderWidth: 1
+      }]
+    };
+
+    // Create the chart with animation
+    const ctx = document.getElementById('emotionsChart').getContext('2d');
+    const emotionsChart = new Chart(ctx, {
+      type: 'pie',
+      data: emotionData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+          animateScale: true,
+          animateRotate: true,
+          duration: 2000
+        },
+        plugins: {
+          legend: {
+            display: false,
+            position: 'right',
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.raw || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                return `${label}: ${value} student(s) (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Create animated custom legend
+    const legendContainer = document.getElementById('emotionLegend');
+    emotionData.labels.forEach((label, i) => {
+      const legendItem = document.createElement('div');
+      legendItem.className = 'emotion-legend-item';
+      legendItem.innerHTML = `
+        <span class="emotion-color" style="background-color: ${emotionData.datasets[0].backgroundColor[i]}"></span>
+        ${label}
+      `;
+      legendContainer.appendChild(legendItem);
+      
+      // Add animation to each legend item
+      anime({
+        targets: legendItem,
+        opacity: [0, 1],
+        translateY: [20, 0],
+        delay: i * 100,
+        easing: 'easeOutExpo'
+      });
+    });
+
+    // Generate insights based on the data
+    const insightsContainer = document.getElementById('insights');
+    const recommendationsContainer = document.getElementById('recommendations');
+    
+    const totalStudents = {{ analysis.person_count }};
+    const activeEngagementCount = {{ analysis.active_engagement_count or 0 }};
+    const calmAttentionCount = {{ analysis.calm_attention_count or 0 }};
+    const focusedChallengeCount = {{ analysis.focused_challenge_count or 0 }};
+    const classroomTensionCount = {{ analysis.classroom_tension_count or 0 }};
+    const learningAnxietyCount = {{ analysis.learning_anxiety_count or 0 }};
+    const learningSurpriseCount = {{ analysis.learning_surprise_count or 0 }};
+    
+    // Calculate percentages
+    const positiveEngagement = (activeEngagementCount + calmAttentionCount) / totalStudents * 100;
+    const needsAttention = (focusedChallengeCount + classroomTensionCount + learningAnxietyCount) / totalStudents * 100;
+    const engagementScore = Math.round(positiveEngagement);
+    const tensionScore = Math.round((classroomTensionCount / totalStudents) * 100);
+    
+    // // Generate insights HTML with animations
+    // let insightsHTML = '<div class="alert alert-info animate__animated animate__fadeIn">';
+    // insightsHTML += '<h5><i class="bi bi-lightbulb insight-icon"></i> Key Insights:</h5><ul>';
+    
+    // if (totalStudents > 0) {
+    //   // Engagement level insight
+    //   if (positiveEngagement >= 70) {
+    //     insightsHTML += `<li class="positive-insight animate__animated animate__fadeInLeft"><i class="bi bi-check-circle-fill insight-icon"></i> <strong>Excellent Engagement:</strong> ${engagementScore}% of students are actively engaged or paying calm attention.</li>`;
+    //   } else if (positiveEngagement >= 50) {
+    //     insightsHTML += `<li class="neutral-insight animate__animated animate__fadeInLeft"><i class="bi bi-info-circle-fill insight-icon"></i> <strong>Moderate Engagement:</strong> ${engagementScore}% of students are positively engaged. Room for improvement.</li>`;
+    //   } else {
+    //     insightsHTML += `<li class="negative-insight animate__animated animate__fadeInLeft"><i class="bi bi-exclamation-triangle-fill insight-icon"></i> <strong>Low Engagement:</strong> Only ${engagementScore}% of students show positive engagement.</li>`;
+    //   }
+      
+    //   // Tension insight
+    //   if (classroomTensionCount > 0) {
+    //     insightsHTML += `<li class="${classroomTensionCount/totalStudents > 0.2 ? 'negative-insight' : 'neutral-insight'} animate__animated animate__fadeInLeft animate-delay-1">
+    //       <i class="bi bi-${classroomTensionCount/totalStudents > 0.2 ? 'exclamation-triangle-fill' : 'info-circle-fill'} insight-icon"></i> 
+    //       <strong>Classroom Tension:</strong> ${classroomTensionCount} student(s) (${Math.round((classroomTensionCount/totalStudents)*100)}%) show signs of tension or frustration.
+    //     </li>`;
+    //   }
+      
+    //   // Focused challenge insight
+    //   if (focusedChallengeCount > 0) {
+    //     insightsHTML += `<li class="neutral-insight animate__animated animate__fadeInLeft animate-delay-2">
+    //       <i class="bi bi-info-circle-fill insight-icon"></i> 
+    //       <strong>Focused Challenge:</strong> ${focusedChallengeCount} student(s) are engaged but may be struggling with the material.
+    //     </li>`;
+    //   }
+      
+    //   // Learning anxiety insight
+    //   if (learningAnxietyCount > 0) {
+    //     insightsHTML += `<li class="${learningAnxietyCount/totalStudents > 0.15 ? 'negative-insight' : 'neutral-insight'} animate__animated animate__fadeInLeft animate-delay-3">
+    //       <i class="bi bi-${learningAnxietyCount/totalStudents > 0.15 ? 'exclamation-triangle-fill' : 'info-circle-fill'} insight-icon"></i> 
+    //       <strong>Learning Anxiety:</strong> ${learningAnxietyCount} student(s) show signs of anxiety about the material.
+    //     </li>`;
+    //   }
+    // } else {
+    //   insightsHTML += '<li class="animate__animated animate__fadeIn">No students detected in the analysis</li>';
+    // }
+    
+    // insightsHTML += '</ul></div>';
+    // insightsContainer.innerHTML = insightsHTML;
+
+    // Generate insights HTML
+    let insightsHTML = '<div class="alert alert-info">';
+    insightsHTML += '<h5><i class="bi bi-lightbulb insight-icon"></i> Key Insights:</h5><ul>';
+    
+    if (totalStudents > 0) {
+      // Engagement level insight
+      if (positiveEngagement >= 70) {
+        insightsHTML += `<li class="positive-insight"><i class="bi bi-check-circle-fill insight-icon"></i> <strong>Excellent Engagement:</strong> ${engagementScore}% of students are actively engaged or paying calm attention.</li>`;
+      } else if (positiveEngagement >= 50) {
+        insightsHTML += `<li class="neutral-insight"><i class="bi bi-info-circle-fill insight-icon"></i> <strong>Moderate Engagement:</strong> ${engagementScore}% of students are positively engaged. Room for improvement.</li>`;
+      } else {
+        insightsHTML += `<li class="negative-insight"><i class="bi bi-exclamation-triangle-fill insight-icon"></i> <strong>Low Engagement:</strong> Only ${engagementScore}% of students show positive engagement.</li>`;
+      }
+      
+      // Tension insight
+      if (classroomTensionCount > 0) {
+        insightsHTML += `<li class="${classroomTensionCount/totalStudents > 0.2 ? 'negative-insight' : 'neutral-insight'}">
+          <i class="bi bi-${classroomTensionCount/totalStudents > 0.2 ? 'exclamation-triangle-fill' : 'info-circle-fill'} insight-icon"></i> 
+          <strong>Classroom Tension:</strong> ${classroomTensionCount} student(s) (${Math.round((classroomTensionCount/totalStudents)*100)}%) show signs of tension or frustration.
+        </li>`;
+      }
+      
+      // Focused challenge insight
+      if (focusedChallengeCount > 0) {
+        insightsHTML += `<li class="neutral-insight">
+          <i class="bi bi-info-circle-fill insight-icon"></i> 
+          <strong>Focused Challenge:</strong> ${focusedChallengeCount} student(s) are engaged but may be struggling with the material.
+        </li>`;
+      }
+      
+      // Learning anxiety insight
+      if (learningAnxietyCount > 0) {
+        insightsHTML += `<li class="${learningAnxietyCount/totalStudents > 0.15 ? 'negative-insight' : 'neutral-insight'}">
+          <i class="bi bi-${learningAnxietyCount/totalStudents > 0.15 ? 'exclamation-triangle-fill' : 'info-circle-fill'} insight-icon"></i> 
+          <strong>Learning Anxiety:</strong> ${learningAnxietyCount} student(s) show signs of anxiety about the material.
+        </li>`;
+      }
+    } else {
+      insightsHTML += '<li>No students detected in the analysis</li>';
+    }
+    
+    insightsHTML += '</ul></div>';
+    insightsContainer.innerHTML = insightsHTML;
+    
+    
+    // Generate recommendations with animations
+    let recommendationsHTML = '<div class="alert alert-success animate__animated animate__fadeIn">';
+    recommendationsHTML += '<h5><i class="bi bi-star-fill insight-icon"></i> Recommendations:</h5><ul>';
+    
+    if (totalStudents > 0) {
+      if (positiveEngagement < 50) {
+        recommendationsHTML += '<li class="animate__animated animate__fadeInRight"><i class="bi bi-arrow-right-circle"></i> Consider more interactive activities to boost engagement</li>';
+        recommendationsHTML += '<li class="animate__animated animate__fadeInRight animate-delay-1"><i class="bi bi-arrow-right-circle"></i> Try breaking content into smaller chunks with frequent checks for understanding</li>';
+      }
+      
+      if (classroomTensionCount > 0 || learningAnxietyCount > 0) {
+        recommendationsHTML += '<li class="animate__animated animate__fadeInRight animate-delay-2"><i class="bi bi-arrow-right-circle"></i> For students showing tension or anxiety, consider one-on-one check-ins</li>';
+        recommendationsHTML += '<li class="animate__animated animate__fadeInRight animate-delay-3"><i class="bi bi-arrow-right-circle"></i> Incorporate stress-reduction techniques like brief mindfulness exercises</li>';
+      }
+      
+      if (focusedChallengeCount > 0) {
+        recommendationsHTML += '<li class="animate__animated animate__fadeInRight animate-delay-4"><i class="bi bi-arrow-right-circle"></i> Students showing focused challenge might benefit from additional examples or scaffolding</li>';
+      }
+      
+      if (positiveEngagement >= 70) {
+        recommendationsHTML += '<li class="animate__animated animate__fadeInRight animate-delay-5"><i class="bi bi-arrow-right-circle"></i> Class is highly engaged - consider challenging them with deeper material</li>';
+      }
+    }
+    
+    recommendationsHTML += '</ul></div>';
+    recommendationsContainer.innerHTML = recommendationsHTML;
+
+    
+
+    // Add animation to all elements with the animate class
+    document.querySelectorAll('.animate__animated').forEach((el, i) => {
+      anime({
+        targets: el,
+        opacity: [0, 1],
+        translateY: [el.classList.contains('animate__fadeInUp') ? 20 : 0, 0],
+        translateX: [el.classList.contains('animate__fadeInLeft') ? -20 : 
+                   (el.classList.contains('animate__fadeInRight') ? 20 : 0), 0],
+        scale: [el.classList.contains('animate__zoomIn') ? 0.9 : 1, 1],
+        delay: i * 100,
+        easing: 'easeOutExpo'
+      });
+    });
+  </script>
+</body>
+</html>
