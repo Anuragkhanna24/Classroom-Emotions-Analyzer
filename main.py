@@ -64,6 +64,11 @@ db_expression_mapping = {
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Render"""
+    return {"status": "healthy", "service": "classroom-emotions-analyzer"}
+
 @app.post("/upload/")
 async def upload_file(request: Request, file: UploadFile = File(...), db: Session = Depends(get_db)):
     try:
@@ -252,3 +257,19 @@ async def get_history(
 @app.get("/static/processed_images/{filename}", response_class=FileResponse)
 async def get_processed_image(filename: str):
     return FileResponse(f"{PROCESSED_FOLDER}/{filename}")
+
+# Add main block for proper deployment
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    
+    # Get port from environment variable or default to 8000
+    port = int(os.environ.get("PORT", 8000))
+    
+    # Run the app
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=port,
+        reload=False
+    )
